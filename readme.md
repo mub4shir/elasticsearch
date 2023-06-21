@@ -19,8 +19,8 @@ Before running the code, make sure you have the following:
 1. Clone the repository.
 
 ```bash
-git clone <repository_url>
-cd <repository_directory>
+git clone https://github.com/mub4shir/elasticsearch.git
+cd elasticsearch
 ```
 
 2. Install the dependencies.
