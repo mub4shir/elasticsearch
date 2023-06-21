@@ -1,6 +1,6 @@
 # Elasticsearch Operations
 
-This code snippet demonstrates basic Elasticsearch operations using the `elasticsearch` package. It covers the following operations:
+This code snippet demonstrates basic Elasticsearch operations using the `@elastic/elasticsearch` package. It covers the following operations:
 
 - Create an index
 - Delete an index

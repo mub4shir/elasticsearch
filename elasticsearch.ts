@@ -1,87 +1,117 @@
-import { Client } from "elasticsearch";
-
-// Elasticsearch configuration
+import { Client } from "@elastic/elasticsearch";
+// Elasticsearch client configuration
 const elasticSearchConfig = {
-  node: "http://localhost:9200", // Replace with your Elasticsearch node URL
+  node: "http://localhost:9200", // Elasticsearch node URL
 };
 
-// Initialize Elasticsearch client
+// Elasticsearch client initialization
 const esClient = new Client(elasticSearchConfig);
 
-// Create an index
-async function createIndex(indexName: string): Promise<void> {
+type Document<T> = {
+  index: string;
+  body: T;
+};
+
+// Function to create an Elasticsearch index
+export async function createIndex(indexName: string): Promise<void> {
+  const params = {
+    index: indexName,
+  };
+
   try {
-    const indexExists = await esClient.indices.exists({ index: indexName });
-    if (!indexExists.body) {
-      await esClient.indices.create({ index: indexName });
-      console.log(`Index '${indexName}' created.`);
+    const indexExists = await esClient.indices.exists(params);
+    console.log("indexExists", indexExists);
+    if (!indexExists) {
+      await esClient.indices.create(params);
+      console.log(`Index '${indexName}' created successfully.`);
     } else {
       console.log(`Index '${indexName}' already exists.`);
     }
   } catch (error) {
-    throw new Error(`Failed to create index '${indexName}': ${error.message}`);
+    console.error(`Error creating index '${indexName}':`, error);
+    throw error;
   }
 }
 
-// Delete an index
-async function deleteIndex(indexName: string): Promise<void> {
+// Function to delete an Elasticsearch index
+export async function deleteIndex(indexName: string): Promise<void> {
+  const params = {
+    index: indexName,
+  };
+
   try {
-    const indexExists = await esClient.indices.exists({ index: indexName });
-    if (indexExists.body) {
-      await esClient.indices.delete({ index: indexName });
-      console.log(`Index '${indexName}' deleted.`);
+    const indexExists = await esClient.indices.exists(params);
+    if (indexExists) {
+      await esClient.indices.delete(params);
+      console.log(`Index '${indexName}' deleted successfully.`);
     } else {
       console.log(`Index '${indexName}' does not exist.`);
     }
   } catch (error) {
-    throw new Error(`Failed to delete index '${indexName}': ${error.message}`);
+    console.error(`Error deleting index '${indexName}':`, error);
+    throw error;
   }
 }
 
-// Index a document
-async function indexDocument(indexName: string, document: any): Promise<void> {
+// Function to index a document in Elasticsearch
+export async function indexDocument<T>(document: Document<T>): Promise<void> {
+  const params = {
+    index: document.index,
+    body: document.body,
+  };
+
   try {
-    await esClient.index({
-      index: indexName,
-      body: document,
-    });
-    console.log("Document indexed.");
+    await esClient.index(params);
+    console.log(`Document indexed successfully.`);
   } catch (error) {
-    throw new Error(`Failed to index document: ${error.message}`);
+    console.error(`Error indexing document:`, error);
+    throw error;
   }
 }
 
-// Search documents
-async function searchDocuments(indexName: string, query: any): Promise<any[]> {
+// Function to search documents in Elasticsearch
+export async function searchDocuments<T>(
+  indexName: string,
+  query: any
+): Promise<any[]> {
+  const params = {
+    index: indexName,
+    body: query,
+  };
+
   try {
-    const { body } = await esClient.search({
-      index: indexName,
-      body: query,
-    });
-    const hits = body.hits.hits;
-    return hits.map((hit: any) => hit._source);
+    const body = await esClient.search(params);
+
+    return body.hits.hits.map((hit: any) => hit._source);
   } catch (error) {
-    throw new Error(`Failed to search documents: ${error.message}`);
+    console.error(`Error searching documents:`, error);
+    throw error;
   }
 }
 
-// Delete a document
-async function deleteDocument(indexName: string, id: string): Promise<void> {
+// Function to delete a document from Elasticsearch
+export async function deleteDocument(
+  indexName: string,
+  documentId: string
+): Promise<void> {
+  const params = {
+    index: indexName,
+    body: {
+      query: {
+        term: {
+          id: documentId,
+        },
+      },
+    },
+  };
+
   try {
-    await esClient.delete({
-      index: indexName,
-      id: id,
-    });
-    console.log("Document deleted.");
+    const body = await esClient.deleteByQuery(params);
+    console.log("body", body);
+
+    console.log(`Document deleted successfully.`);
   } catch (error) {
-    throw new Error(`Failed to delete document: ${error.message}`);
+    console.error(`Error deleting document:`, error);
+    throw error;
   }
 }
-
-export {
-  createIndex,
-  deleteIndex,
-  indexDocument,
-  searchDocuments,
-  deleteDocument,
-};
