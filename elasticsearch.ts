@@ -98,7 +98,7 @@ export async function deleteDocument(
     index: indexName,
     body: {
       query: {
-        term: {
+        match: {
           id: documentId,
         },
       },
